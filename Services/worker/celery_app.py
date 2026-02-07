@@ -4,6 +4,7 @@ celery_app = Celery(
     "worker",
     broker="redis://localhost:6379/0",
     backend="redis://localhost:6379/1",
+    include=["tasks"],  # 👈 THIS IS THE FIX
 )
 
 celery_app.conf.update(
