@@ -1,0 +1,54 @@
+services:
+  redis:
+    image: redis:7
+
+  api:
+    build:
+      context: ./Services/api
+    depends_on:
+      redis:
+        condition: service_started
+    ports:
+      - "8000:8000"
+    environment:
+      REDIS_URL: redis://redis:6379/0
+
+  worker-thumbnails:
+    build:
+      context: ./Services
+      dockerfile: worker/Dockerfile
+    depends_on:
+      redis:
+        condition: service_started
+    command:
+      - python
+      - -m
+      - celery
+      - -A
+      - celery_app
+      - worker
+      - --loglevel=info
+      - -Q
+      - thumbnails
+    environment:
+      REDIS_URL: redis://redis:6379/0
+
+  worker-transcoding:
+    build:
+      context: ./Services
+      dockerfile: worker/Dockerfile
+    depends_on:
+      redis:
+        condition: service_started
+    command:
+      - python
+      - -m
+      - celery
+      - -A
+      - celery_app
+      - worker
+      - --loglevel=info
+      - -Q
+      - transcoding
+    environment:
+      REDIS_URL: redis://redis:6379/0
