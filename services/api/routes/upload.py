@@ -1,3 +1,6 @@
+from services.api.core.worker import process_video
+import threading
+from services.api.core.states import JobStatus
 from fastapi import APIRouter, UploadFile, File
 import uuid, os
 from services.api.core.jobs import jobs
@@ -14,5 +17,12 @@ async def upload(file: UploadFile = File(...)):
     with open(path, "wb") as f:
         f.write(await file.read())
 
-    jobs[job_id] = {"status": "PENDING", "filename": file.filename}
-    return {"job_id": job_id, "status": "PENDING"}
+    jobs[job_id] = {
+        "status": JobStatus.PENDING,
+        "filename": file.filename
+    }
+    threading.Thread(target=process_video, args=(job_id,)).start()
+    return {
+        "job_id": job_id,
+        "status": jobs[job_id]["status"]
+    }
