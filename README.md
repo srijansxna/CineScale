@@ -1,5 +1,10 @@
 # CineScale
 
+The Latest updates are on the dev branch of the repo. please check it for the work done.....
+
+
+
+
 A Distributed Video Processing & Streaming Pipeline
 
 📌 Overview
