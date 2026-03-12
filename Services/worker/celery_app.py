@@ -18,7 +18,7 @@ celery_app = Celery(
     "worker",
     broker=f"redis://{REDIS_HOST}:{REDIS_PORT}/{BROKER_DB}",
     backend=f"redis://{REDIS_HOST}:{REDIS_PORT}/{BACKEND_DB}",
-    include=["tasks"],
+    include=["Services.worker.tasks"],
 )
 
 celery_app.conf.update(
