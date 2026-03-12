@@ -1,0 +1,1 @@
+"""CineScale Worker Service"""
