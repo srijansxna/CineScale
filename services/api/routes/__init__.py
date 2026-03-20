@@ -1,3 +1,1 @@
-from services.api.routes import upload, jobs, videos
-
-__all__ = ["upload", "jobs", "videos"]
+# Routes are imported directly in main.py — no re-exports needed here

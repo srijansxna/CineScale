@@ -108,6 +108,8 @@ class VideoService:
             select(ProcessingJob).where(ProcessingJob.video_id == video_id)
         )
         return result.scalar_one_or_none()
+
+    async def get_job_by_id(self, job_id: str) -> ProcessingJob:
         """Get job by job_id."""
         result = await self.db.execute(
             select(ProcessingJob).where(ProcessingJob.job_id == job_id)
