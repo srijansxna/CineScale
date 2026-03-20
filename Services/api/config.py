@@ -26,7 +26,16 @@ class Settings(BaseSettings):
     # Celery
     celery_broker_url: str = "redis://localhost:6379/0"
     celery_result_backend: str = "redis://localhost:6379/1"
-    
+
+    # MinIO / S3
+    minio_endpoint: str = "http://localhost:9000"
+    minio_access_key: str = "minioadmin"
+    minio_secret_key: str = "minioadmin"
+    minio_bucket_raw: str = "raw-videos"
+    minio_bucket_variants: str = "video-variants"
+    minio_bucket_thumbnails: str = "thumbnails"
+    minio_presigned_expiry: int = 3600  # seconds
+
     class Config:
         env_file = ".env"
         case_sensitive = False

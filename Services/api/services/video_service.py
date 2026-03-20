@@ -60,7 +60,7 @@ class VideoService:
         self.db.add(job)
         
         # Commit to database
-        await self.db.flush()
+        await self.db.commit()
         await self.db.refresh(video)
         await self.db.refresh(job)
         
