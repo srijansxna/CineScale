@@ -1,4 +1,9 @@
 venv/
+.env
+mini-netflix-frontend/.env
+__pycache__/
+*.pyc
+node_modules/
 
 # Project specific
 storage/raw/*

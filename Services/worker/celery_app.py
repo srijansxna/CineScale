@@ -20,6 +20,8 @@ celery_app = Celery(
     backend=f"redis://{REDIS_HOST}:{REDIS_PORT}/{BACKEND_DB}",
     include=["services.worker.tasks"],
 )
+
+celery_app.conf.update(
     task_serializer="json",
     accept_content=["json"],
     result_serializer="json",
