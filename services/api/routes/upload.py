@@ -55,7 +55,7 @@ async def upload_video(
 
     # 3. Push to Redis queue via Celery
     celery_app.send_task(
-        "Services.worker.tasks.process_video",
+        "services.worker.tasks.process_video",
         args=[task_payload],
         task_id=job.job_id,  # use job_id as Celery task id for easy lookup
     )

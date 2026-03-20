@@ -92,7 +92,7 @@ services:
       context: .
       dockerfile: Services/api/Dockerfile
     restart: unless-stopped
-    command: ["celery", "-A", "services.worker.celery_app", "worker", "--loglevel=info", "--pool=solo", "--concurrency=2"]
+    command: ["celery", "-A", "services.worker.celery_app", "worker", "--loglevel=info", "--pool=prefork", "--concurrency=2"]
     environment:
       - DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/cinescale
       - REDIS_HOST=redis

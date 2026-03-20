@@ -1,6 +1,6 @@
 import uuid
 from pathlib import Path
-from typing import Tuple
+from typing import Tuple, List
 from fastapi import UploadFile, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -109,6 +109,24 @@ class VideoService:
         )
         return result.scalar_one_or_none()
 
+    async def get_all_videos(self) -> List[Tuple[Video, ProcessingJob]]:
+        """Get all videos with their latest processing job, ordered by newest first."""
+        videos_result = await self.db.execute(
+            select(Video).order_by(Video.created_at.desc())
+        )
+        videos = videos_result.scalars().all()
+
+        pairs = []
+        for video in videos:
+            job_result = await self.db.execute(
+                select(ProcessingJob).where(
+                    ProcessingJob.video_id == video.video_id)
+            )
+            job = job_result.scalar_one_or_none()
+            if job:
+                pairs.append((video, job))
+        return pairs
+
     async def get_job_by_id(self, job_id: str) -> ProcessingJob:
         """Get job by job_id."""
         result = await self.db.execute(
@@ -156,7 +174,7 @@ class VideoService:
             if error:
                 job.error = error
             
-            await self.db.flush()
+            await self.db.commit()
             await self.db.refresh(job)
         return job
     
@@ -165,7 +183,7 @@ class VideoService:
         job = await self.get_job_by_id(job_id)
         if job:
             await self.db.delete(job)
-            await self.db.flush()
+            await self.db.commit()
             return True
         return False
 

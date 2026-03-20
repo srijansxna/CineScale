@@ -1,8 +1,8 @@
 from .celery_app import celery_app
 from .job_status import set_status, update_progress
-from transcoder.metadata import extract_metadata
-from transcoder.transcode import transcode_video
-from transcoder.thumbnails import generate_thumbnails_by_percentage
+from services.transcoder.metadata import extract_metadata
+from services.transcoder.transcode import transcode_video
+from services.transcoder.thumbnails import generate_thumbnails_by_percentage
 import logging
 import os
 
@@ -83,14 +83,23 @@ def process_video(self, job: dict):
         # Build result
         result = {
             "metadata": metadata,
-            "transcoded_files": transcoded_files,
+            "variants": [
+                {
+                    "resolution": res,
+                    "width": {"360p": 640, "720p": 1280, "1080p": 1920}.get(res, 0),
+                    "height": {"360p": 360, "720p": 720, "1080p": 1080}.get(res, 0),
+                    "file_size": os.path.getsize(path) if os.path.exists(path) else None,
+                    "status": "ready",
+                }
+                for res, path in transcoded_files.items()
+            ],
             "thumbnails": thumbnails,
             "input_file": input_path,
-            "output_directory": output_dir
+            "output_directory": output_dir,
         }
         
         # Mark as complete
-        set_status(job_id, "COMPLETED", {
+        set_status(job_id, "DONE", {
             "progress": 100,
             "result": result
         })
