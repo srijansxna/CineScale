@@ -1,204 +1,159 @@
 # CineScale
 
-The Latest updates are on the dev branch of the repo. please check it for the work done.....
+A distributed video processing platform — upload a video, get back multiple resolutions, thumbnails, and metadata. Inspired by how Netflix and YouTube handle video ingestion at scale.
 
+## What it does
 
+1. Upload a video via the React frontend
+2. FastAPI saves the file and dispatches a Celery job
+3. The worker transcodes to 360p / 720p / 1080p using FFmpeg
+4. Thumbnails are extracted at 10%, 50%, 90% of the video duration
+5. Job progress is tracked in PostgreSQL and polled live by the frontend
+6. Watch the finished video in any resolution directly in the browser
 
+---
 
-A Distributed Video Processing & Streaming Pipeline
+## Tech Stack
 
-📌 Overview
+| Layer | Technology |
+|---|---|
+| Frontend | React + Vite + TypeScript + Tailwind CSS + Framer Motion |
+| API | FastAPI (Python 3.11) |
+| Task queue | Celery + Redis |
+| Database | PostgreSQL (async via SQLAlchemy + asyncpg) |
+| Video processing | FFmpeg |
+| Storage | Local filesystem (MinIO-ready) |
+| Containerisation | Docker + Docker Compose |
 
-CineScale is a backend-heavy, cloud-native system inspired by Netflix’s internal video pipeline.
-It demonstrates how large video platforms ingest raw media, process it into multiple formats, and serve it efficiently at scale using Python, Docker, Kubernetes, FFmpeg, and async workers.
+---
 
-This project focuses on systems design, scalability, containerization, and distributed processing rather than UI.
+## Project Structure
 
-🧠 What Problem Does CineScale Solve?
-
-Uploading a video is easy.
-Processing, encoding, storing, and streaming it reliably at scale is hard.
-
-CineScale simulates:
-
-High-load video ingestion
-
-Asynchronous video processing
-
-Multiple resolution outputs
-
-Scalable deployment using containers and orchestration
-
-🏗️ System Architecture
-Client
-  ↓
-FastAPI (Upload & Metadata Service)
-  ↓
-Message Queue (Redis / RabbitMQ)
-  ↓
-Worker Nodes (FFmpeg Processing)
-  ↓
-Object Storage (Local / S3)
-  ↓
-Streaming API
-
-Core Principles Used
-
-Microservices
-
-Async task queues
-
-Stateless APIs
-
-Horizontal scalability
-
-Fault isolation
-
-⚙️ Tech Stack
-Backend
-
-Python 3.10+
-
-FastAPI – REST APIs
-
-FFmpeg – Video transcoding
-
-Distributed Processing
-
-Celery – Background workers
-
-Redis / RabbitMQ – Message broker
-
-Storage
-
-Local filesystem (development)
-
-S3-compatible storage (optional extension)
-
-DevOps & Infra
-
-Docker – Containerization
-
-Docker Compose – Local orchestration
-
-Kubernetes – Production-grade orchestration
-
-Nginx – Reverse proxy & streaming
-
-✨ Features
-📤 Video Upload
-
-Upload raw video files
-
-Metadata stored separately
-
-Non-blocking request handling
-
-🔄 Asynchronous Processing
-
-Videos are transcoded in background
-
-Generates multiple resolutions:
-
-240p
-
-360p
-
-720p
-
-📡 Streaming Support
-
-Resolution-based streaming endpoints
-
-HTTP-based delivery
-
-📈 Scalability
-
-Multiple worker replicas
-
-Queue-based load balancing
-
-Kubernetes-ready deployment
-
-📂 Project Structure
-cinescale/
-│
-├── api/
-│   ├── main.py
-│   ├── routes/
-│   └── schemas/
-│
-├── worker/
-│   ├── tasks.py
-│   └── ffmpeg_utils.py
-│
-├── storage/
-│   └── videos/
-│
-├── docker/
-│   ├── api.Dockerfile
-│   ├── worker.Dockerfile
-│
-├── k8s/
-│   ├── api-deployment.yaml
-│   ├── worker-deployment.yaml
-│   ├── redis.yaml
-│
+```
+CineScale/
+├── Services/
+│   ├── api/                  # FastAPI application
+│   │   ├── routes/           # upload, jobs, videos endpoints
+│   │   ├── services/         # VideoService, StorageService
+│   │   ├── db/               # SQLAlchemy models + Postgres setup
+│   │   ├── schemas/          # Pydantic request/response models
+│   │   ├── config.py         # Settings (pydantic-settings)
+│   │   └── Dockerfile
+│   ├── worker/               # Celery worker
+│   │   ├── tasks.py          # process_video task
+│   │   ├── celery_app.py     # Celery app config
+│   │   └── job_status.py     # Redis status helpers
+│   └── transcoder/           # FFmpeg wrappers
+│       ├── transcode.py      # Multi-resolution transcoding
+│       ├── thumbnails.py     # Thumbnail extraction
+│       └── metadata.py       # Video metadata extraction
+├── mini-netflix-frontend/    # React frontend
+│   └── src/
+│       ├── pages/            # Dashboard, Upload, JobStatus, VideoDetail
+│       ├── components/       # VideoCard, UploadBox, Navbar, skeletons…
+│       ├── hooks/            # useUpload, useJobStatus
+│       ├── services/         # Axios API client
+│       └── lib/              # React Query, motion variants
+├── storage/                  # Mounted volume for raw + output files
 ├── docker-compose.yml
-└── README.md
+├── requirements.txt
+└── .env.example
+```
 
-🚀 Getting Started
-Prerequisites
+---
 
-Docker
+## Running locally
 
-Docker Compose
+**Prerequisites:** Docker Desktop running, Node.js 18+
 
-Python 3.10+
+### 1 — Backend (Terminal 1)
 
-FFmpeg installed locally (for dev mode)
+```bash
+docker compose up
+```
 
-Run Locally (Docker Compose)
-docker-compose up --build
+First run takes ~10 minutes (FFmpeg install). Subsequent starts take ~5 seconds.
 
+### 2 — Frontend (Terminal 2)
 
-Services started:
+```bash
+cd mini-netflix-frontend
+npm install
+npm run dev
+```
 
-FastAPI server
+Open **http://localhost:5173**
 
-Redis
+### Ports
 
-Worker containers
+| Service | URL |
+|---|---|
+| Frontend | http://localhost:5173 |
+| API + Swagger | http://localhost:8000/docs |
+| MinIO console | http://localhost:9001 (minioadmin / minioadmin) |
+| PostgreSQL | localhost:5432 |
+| Redis | localhost:6379 |
 
-☸️ Kubernetes Deployment (Optional Advanced)
-kubectl apply -f k8s/
+---
 
+## Stopping
 
-Supports:
+```bash
+# Stop frontend: Ctrl+C in terminal 2
 
-Horizontal pod scaling
+# Stop backend
+docker compose down
 
-Service discovery
+# Stop and wipe all data (videos, DB, Redis)
+docker compose down -v
+```
 
-Stateless deployments
+---
 
-🧪 Sample API Endpoints
-Method	Endpoint	Description
-POST	/upload	Upload a video
-GET	/videos/{id}	Fetch metadata
-GET	/stream/{id}/{resolution}	Stream video
-🎯 Learning Outcomes
+## API Endpoints
 
-This project demonstrates:
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | `/api/upload` | Upload a video file |
+| GET | `/api/job/{job_id}` | Poll job status + progress |
+| GET | `/api/videos` | List all videos |
+| GET | `/api/videos/{video_id}` | Video detail + metadata + variants |
+| GET | `/api/videos/{video_id}/stream/{resolution}` | Stream a resolution (360p/720p/1080p) |
+| GET | `/api/videos/{video_id}/thumbnails/{name}` | Fetch a thumbnail |
 
-Real-world backend architecture
+---
 
-Distributed task execution
+## Environment variables
 
-Containerized microservices
+Copy `.env.example` to `.env` before running outside Docker:
 
-Kubernetes fundamentals
+```bash
+cp .env.example .env
+```
 
-Media processing pipelines
+Key variables:
 
-Production-grade system thinking
+```env
+DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/cinescale
+REDIS_HOST=localhost
+CELERY_BROKER_URL=redis://localhost:6379/0
+MINIO_ENDPOINT=http://localhost:9000
+```
+
+---
+
+## Processing pipeline
+
+```
+Upload → Save to disk → Create DB record → Dispatch Celery task
+                                                    ↓
+                                          Extract metadata (ffprobe)
+                                                    ↓
+                                     Transcode → 360p / 720p / 1080p
+                                                    ↓
+                                   Generate thumbnails at 10% / 50% / 90%
+                                                    ↓
+                                        Write result to PostgreSQL
+                                                    ↓
+                                         Frontend polls → DONE ✓
+```
