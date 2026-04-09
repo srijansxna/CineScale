@@ -1,0 +1,16 @@
+venv/
+.env
+CineScale/.env
+__pycache__/
+*.pyc
+node_modules/
+
+# Project specific
+storage/raw/*
+storage/output/*
+!storage/raw/.gitkeep
+!storage/output/.gitkeep
+.DS_Store
+*.mp4
+*.avi
+*.mov

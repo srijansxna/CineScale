@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cinescale-config
+  namespace: cinescale
+data:
+  REDIS_HOST: redis
+  REDIS_PORT: "6379"
+  CELERY_BROKER_URL: redis://redis:6379/0
+  CELERY_RESULT_BACKEND: redis://redis:6379/1
+  MINIO_ENDPOINT: http://minio:9000
+  MINIO_BUCKET_RAW: raw-videos
+  MINIO_BUCKET_VARIANTS: video-variants
+  MINIO_BUCKET_THUMBNAILS: thumbnails
+  DEBUG: "False"
