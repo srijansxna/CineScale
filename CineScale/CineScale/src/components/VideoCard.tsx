@@ -16,7 +16,13 @@ interface Props {
 }
 
 export default function VideoCard({ video, busy = false, onDelete, onTogglePin }: Props) {
-  const thumb  = video.thumbnails?.[1] ?? video.thumbnails?.[0]
+  // Prefer final processed thumbnail, then the user-selected one, then 50%, then 10%
+  const THUMB_INDEX: Record<string, number> = { thumbnail_10: 0, thumbnail_50: 1, thumbnail_90: 2 }
+  const selectedIndex = video.default_thumbnail ? (THUMB_INDEX[video.default_thumbnail] ?? 1) : 1
+  const thumb = video.final_thumbnail_url
+    ?? video.thumbnails?.[selectedIndex]
+    ?? video.thumbnails?.[1]
+    ?? video.thumbnails?.[0]
   const status = video.processing.status
   const pinned = video.isPinned ?? false
 
@@ -114,8 +120,8 @@ export default function VideoCard({ video, busy = false, onDelete, onTogglePin }
         <div className="aspect-video bg-zinc-900 relative overflow-hidden">
           {thumb ? (
             <img
-              src={`${API}${thumb}`}
-              alt={video.filename}
+              src={thumb.startsWith('http') ? thumb : `${API}${thumb}`}
+              alt={video.video_title ?? video.filename}
               loading="lazy"
               className="w-full h-full object-cover group-hover/card:scale-105 transition-transform duration-300"
             />
