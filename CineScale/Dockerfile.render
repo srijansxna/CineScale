@@ -1,0 +1,35 @@
+FROM python:3.11-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PYTHONPATH=/app
+
+WORKDIR /app
+
+# System deps: ffmpeg + supervisor to run API + worker in one container
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ffmpeg \
+    supervisor \
+    && rm -rf /var/lib/apt/lists/*
+
+# Python deps
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# App source
+COPY Services/ ./services/
+COPY .env.example ./
+
+# Storage dirs (Render disk or ephemeral)
+RUN mkdir -p storage/raw storage/output storage/thumbnails
+
+# Supervisor config — runs API + Celery worker together
+COPY supervisord.conf /etc/supervisor/conf.d/cinescale.conf
+
+RUN adduser --disabled-password --gecos "" appuser \
+    && chown -R appuser:appuser /app
+USER appuser
+
+EXPOSE 8000
+
+CMD ["supervisord", "-c", "/etc/supervisor/conf.d/cinescale.conf"]
